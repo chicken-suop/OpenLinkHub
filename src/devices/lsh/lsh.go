@@ -407,6 +407,12 @@ func (d *Device) setupLedProfile() {
 		d.ledProfile = led.LoadProfile(d.Serial) // Reload
 	}
 
+	// Safety check: if ledProfile is still nil after save/reload, skip LED setup
+	if d.ledProfile == nil {
+		logger.Log(logger.Fields{"serial": d.Serial, "product": d.Product}).Error("Unable to initialize LED profile, skipping LED setup")
+		return
+	}
+
 	profileLength := len(d.ledProfile.Devices)
 	actualLength := len(d.Devices)
 	if profileLength != actualLength {

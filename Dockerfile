@@ -4,10 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y libudev-dev
 
 WORKDIR /app
-RUN git clone https://github.com/jurkovic-nikola/OpenLinkHub.git
-
-WORKDIR /app/OpenLinkHub
-RUN if [ -n "$GIT_TAG" ]; then git checkout "$GIT_TAG"; fi
+COPY . .
 RUN go build .
 
 FROM debian:bullseye-slim
@@ -18,12 +15,20 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN groupadd openlinkhub && \
+    groupadd i2c && \
+    groupadd input && \
+    useradd -g openlinkhub -G i2c,input -m -s /bin/bash openlinkhub
+
 RUN mkdir -p /opt/OpenLinkHub
-COPY --from=build /app/OpenLinkHub/OpenLinkHub /opt/OpenLinkHub/
-COPY --from=build /app/OpenLinkHub/database /opt/OpenLinkHub/database
-COPY --from=build /app/OpenLinkHub/static /opt/OpenLinkHub/static
-COPY --from=build /app/OpenLinkHub/web /opt/OpenLinkHub/web
+COPY --from=build /app/OpenLinkHub /opt/OpenLinkHub/
+COPY --from=build /app/database /opt/OpenLinkHub/database
+COPY --from=build /app/static /opt/OpenLinkHub/static
+COPY --from=build /app/web /opt/OpenLinkHub/web
+
+RUN chown -R openlinkhub:openlinkhub /opt/OpenLinkHub
 
 WORKDIR /opt/OpenLinkHub
+USER openlinkhub
 
 ENTRYPOINT ["/opt/OpenLinkHub/OpenLinkHub"]

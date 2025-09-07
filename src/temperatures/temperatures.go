@@ -333,7 +333,7 @@ func AddTemperatureProfile(profile, deviceId string, static, zeroRpm, linear boo
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if _, ok := temperatures.Profiles[profile]; !ok {
+	if _, ok := profiles[profile]; !ok {
 		pf := TemperatureProfileData{}
 		if static || linear {
 			pf = profileStatic
@@ -691,6 +691,7 @@ func saveProfileToDisk(profile string, values TemperatureProfileData) error {
 	}
 
 	LoadUserProfiles(profiles)
+	temperatures.Profiles = profiles
 	return nil
 }
 
